@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Student Grievance Management System</title>
+<style>
+:root{--b:#1d4ed8;--b2:#2563eb;--bl:#eff6ff;--t:#0f172a;--m:#64748b;--l:#e2e8f0}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.5 system-ui,"Segoe UI",Arial,sans-serif;background:#f1f5f9;color:var(--t)}
+.top{background:var(--b);color:#fff;display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 16px;position:sticky;top:0;z-index:10}
+.top b{font-size:17px;margin-right:10px}
+.top nav{display:flex;flex-wrap:wrap;gap:4px}
+.top nav button{background:transparent;color:#dbeafe;border:0;padding:6px 12px;border-radius:6px;cursor:pointer;font:inherit}
+.top nav button.on,.top nav button:hover{background:#1e40af;color:#fff}
+.sp{flex:1}
+.wrap{max-width:1050px;margin:20px auto;padding:0 14px}
+.card{background:#fff;border:1px solid var(--l);border-radius:12px;padding:18px;margin-bottom:16px;box-shadow:0 1px 3px rgba(15,23,42,.05)}
+h2{margin:0 0 12px;font-size:20px} h3{margin:0 0 10px;font-size:16px}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+.stat{background:#fff;border:1px solid var(--l);border-left:4px solid var(--b2);border-radius:10px;padding:14px}
+.stat b{font-size:28px;display:block}.stat span{color:var(--m);font-size:13px}
+label{display:block;font-weight:600;margin:10px 0 4px;font-size:13px}
+input,select,textarea{width:100%;padding:9px 10px;border:1px solid #cbd5e1;border-radius:8px;font:inherit;background:#fff}
+input[type=checkbox]{width:auto;margin-right:6px}
+textarea{min-height:90px;resize:vertical}
+.btn{background:var(--b2);color:#fff;border:0;padding:9px 16px;border-radius:8px;cursor:pointer;font:inherit;margin-top:12px}
+.btn:hover{background:var(--b)}.btn.sec{background:#e2e8f0;color:var(--t)}.btn.red{background:#dc2626}
+.btn.sm{padding:4px 10px;margin:0;font-size:13px}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--l);font-size:14px;vertical-align:middle}
+th{color:var(--m);font-size:12px;text-transform:uppercase}
+tr.row{cursor:pointer}tr.row:hover{background:var(--bl)}
+.badge{display:inline-block;padding:2px 10px;border-radius:99px;font-size:12px;font-weight:600;white-space:nowrap}
+.s-Submitted{background:#e0e7ff;color:#3730a3}.s-Under{background:#fef3c7;color:#92400e}
+.s-In{background:#dbeafe;color:#1e40af}.s-Resolved{background:#dcfce7;color:#166534}
+.s-Rejected{background:#fee2e2;color:#991b1b}.esc{background:#991b1b;color:#fff}
+.p-High{color:#dc2626;font-weight:700}.p-Medium{color:#d97706}.p-Low{color:#16a34a}
+.m{color:var(--m);font-size:13px}.err{color:#dc2626;font-size:13px;min-height:18px}
+.bar{display:flex;align-items:center;gap:8px;margin:7px 0;font-size:13px}
+.bar i{width:110px;font-style:normal}.bar .tr{flex:1;background:#e2e8f0;border-radius:6px;height:18px;overflow:hidden}
+.bar .tr div{height:100%;background:var(--b2);border-radius:6px}.bar em{width:26px;font-style:normal;font-weight:700}
+ul.tl{list-style:none;margin:0;padding:0 0 0 18px;border-left:2px solid #bfdbfe}
+ul.tl li{margin:0 0 14px;position:relative}
+ul.tl li:before{content:"";position:absolute;left:-25px;top:5px;width:12px;height:12px;border-radius:50%;background:var(--b2);border:2px solid #fff}
+.cm{background:var(--bl);border-radius:10px;padding:9px 12px;margin:8px 0}
+.cm.me{background:#f0fdf4}
+.bell{position:relative}.bell>button{background:#1e40af;color:#fff;border:0;border-radius:8px;padding:6px 10px;cursor:pointer}
+.bell .n{position:absolute;top:-6px;right:-6px;background:#ef4444;color:#fff;border-radius:99px;font-size:11px;padding:0 6px}
+.panel{position:absolute;right:0;top:40px;width:320px;max-height:380px;overflow:auto;background:#fff;color:var(--t);border:1px solid var(--l);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.15)}
+.panel div{padding:9px 12px;border-bottom:1px solid var(--l);font-size:13px;cursor:pointer}.panel div.u{background:var(--bl);font-weight:600}
+.stars button{background:none;border:0;font-size:28px;color:#cbd5e1;cursor:pointer;padding:0 2px}.stars button.on{color:#f59e0b}
+.auth{max-width:400px;margin:50px auto}.demo{background:var(--bl);border-radius:8px;padding:10px;font-size:13px;margin-top:14px}
+.two{display:grid;gap:14px;grid-template-columns:1fr 1fr}.filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.filters>*{flex:1;min-width:150px}.tbl{overflow-x:auto}
+@media(max-width:700px){.two{grid-template-columns:1fr}.panel{width:260px;right:-60px}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* ============ MODULE: STORAGE & CONSTANTS ============ */
+const KEY='sgms_demo_v1';
+const DEPTS=['Academics','Hostel','Accounts','Library','Discipline','General'];
+const CATS=['Academics','Hostel','Fees','Library','Ragging','Other'];
+const CAT2DEPT={Academics:'Academics',Hostel:'Hostel',Fees:'Accounts',Library:'Library',Ragging:'Discipline',Other:'General'};
+const STATUSES=['Submitted','Under Review','In Progress','Resolved','Rejected'];
+// Role-based access control: which views each role may open
+const ACL={student:['dashboard','submit','list','detail'],officer:['dashboard','list','detail'],admin:['dashboard','list','detail','users']};
+const NAV={student:[['dashboard','Dashboard'],['submit','Submit Grievance'],['list','My Grievances']],
+  officer:[['dashboard','Dashboard'],['list','Assigned Grievances']],
+  admin:[['dashboard','Dashboard'],['list','All Grievances'],['users','Manage Users']]};
+let DB,me=null,view='dashboard',selId=null,filt={q:'',s:''},bellOpen=false,rating=0,authMode='login',authMsg='';
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const now=()=>new Date().toISOString();
+const fmt=d=>new Date(d).toLocaleString();
+const days=d=>(Date.now()-new Date(d))/864e5;
+const uid=()=>'x'+Math.random().toString(36).slice(2,9);
+const sc=s=>'s-'+s.split(' ')[0];
+const save=()=>localStorage.setItem(KEY,JSON.stringify(DB));
+const uById=id=>DB.users.find(u=>u.id===id);
+const gById=id=>DB.grievances.find(g=>g.id===id);
+
+function load(){
+  try{DB=JSON.parse(localStorage.getItem(KEY))}catch(e){DB=null}
+  if(!DB||!DB.users)seed();
+}
+/* Pre-load sample data (first run / reset) */
+function seed(){
+  const ago=d=>new Date(Date.now()-d*864e5).toISOString();
+  DB={seq:0,session:null,notifs:[],grievances:[],users:[
+    {id:'u1',name:'Demo Student',email:'student@demo.com',pass:'student123',role:'student'},
+    {id:'u2',name:'Dr. Rao',email:'officer@demo.com',pass:'officer123',role:'officer',dept:'Academics'},
+    {id:'u3',name:'Admin User',email:'admin@demo.com',pass:'admin123',role:'admin'},
+    {id:'u4',name:'Ms. Priya (Warden)',email:'hostel@demo.com',pass:'officer123',role:'officer',dept:'Hostel'},
+    {id:'u5',name:'Ravi Kumar',email:'ravi@demo.com',pass:'student123',role:'student'}]};
+  const add=(cat,title,desc,pri,anon,stu,status,age,note)=>{
+    const g={id:'GRV-'+new Date().getFullYear()+'-'+String(++DB.seq).padStart(4,'0'),cat,title,desc,priority:pri,anon,
+      studentId:stu,dept:CAT2DEPT[cat],officerId:null,status:'Submitted',created:ago(age),resolution:'',feedback:null,
+      history:[{status:'Submitted',at:ago(age),by:stu,note:''}],comments:[]};
+    if(status!=='Submitted'){g.status=status;g.history.push({status,at:ago(age-1),by:'u2',note:note||''});if(note&&status==='Resolved')g.resolution=note}
+    DB.grievances.push(g);return g;};
+  add('Academics','Wrong marks in internal exam','My Maths internal marks look incorrect on the portal.','High',false,'u1','Under Review',10);
+  add('Hostel','Water leakage in room 204','There is a leak from the ceiling during rain.','High',false,'u1','In Progress',3);
+  add('Fees','Scholarship not credited','Scholarship amount is still not reflected in my fee account.','Medium',false,'u5','Submitted',9);
+  const r=add('Library','Books unavailable for syllabus','Reference books for Semester 4 are not available.','Low',false,'u1','Resolved',12,'New copies purchased and added to the library.');
+  r.comments.push({uid:'u2',text:'We have ordered the books.',at:ago(11)});
+  add('Ragging','Juniors being harassed','Some seniors are troubling first-year students near the canteen.','High',true,'u5','Submitted',2);
+  add('Academics','Lab timetable clash','Physics and Chemistry labs overlap on Thursday.','Medium',false,'u5','Submitted',1);
+  save();
+}
+
+/* ============ MODULE: AUTH ============ */
+function doLogin(e){
+  e.preventDefault();const f=e.target.elements;
+  const u=DB.users.find(x=>x.email===f.email.value.trim().toLowerCase()&&x.pass===f.pass.value);
+  if(!u){authMsg='Invalid email or password.';return render();}
+  DB.session=u.id;save();authMsg='';view='dashboard';filt={q:'',s:''};render();
+}
+function doRegister(e){
+  e.preventDefault();const f=e.target.elements;
+  const name=f.name.value.trim(),email=f.email.value.trim().toLowerCase(),pass=f.pass.value;
+  if(!name||!email||pass.length<6){authMsg='Fill all fields (password min 6 chars).';return render();}
+  if(DB.users.some(u=>u.email===email)){authMsg='Email already registered.';return render();}
+  const u={id:uid(),name,email,pass,role:'student'};DB.users.push(u);DB.session=u.id;save();
+  authMsg='';view='dashboard';render();
+}
+function logout(){DB.session=null;save();bellOpen=false;render();}
+function resetDemo(){
+  if(!confirm('Reset all demo data? This removes every account and grievance you created.'))return;
+  localStorage.removeItem(KEY);seed();authMsg='Demo data reset.';view='dashboard';render();
+}
+function setAuth(m){authMode=m;authMsg='';render();}
+function authHTML(){
+  const reg=authMode==='register';
+  return `<div class="auth"><div class="card"><h2 style="color:var(--b)">🎓 Grievance Management System</h2>
+  <form onsubmit="${reg?'doRegister':'doLogin'}(event)">
+  ${reg?'<label>Full name</label><input name="name" required>':''}
+  <label>Email</label><input name="email" type="email" required>
+  <label>Password</label><input name="pass" type="password" required>
+  <div class="err">${esc(authMsg)}</div>
+  <button class="btn" style="width:100%">${reg?'Register as Student':'Login'}</button></form>
+  <p class="m" style="text-align:center">${reg?'Have an account? <a href="#" onclick="setAuth(\'login\');return false">Login</a>':'New student? <a href="#" onclick="setAuth(\'register\');return false">Register</a>'}</p>
+  <div class="demo"><b>Demo accounts</b><br>student@demo.com / student123<br>officer@demo.com / officer123 (Academics)<br>hostel@demo.com / officer123 (Hostel)<br>admin@demo.com / admin123</div>
+  <button class="btn sec sm" style="margin-top:12px" onclick="resetDemo()">Reset demo data</button></div></div>`;
+}
+
+/* ============ MODULE: NOTIFICATIONS ============ */
+function notify(uids,text,gid){
+  [...new Set(uids)].filter(Boolean).forEach(u=>DB.notifs.push({id:uid(),uid:u,text,at:now(),read:false,gid}));
+}
+const deptOfficers=d=>DB.users.filter(u=>u.role==='officer'&&u.dept===d).map(u=>u.id);
+const admins=()=>DB.users.filter(u=>u.role==='admin').map(u=>u.id);
+function toggleBell(){bellOpen=!bellOpen;render();}
+function openNotif(id){
+  const n=DB.notifs.find(x=>x.id===id);if(n){n.read=true;save();bellOpen=false;if(n.gid&&gById(n.gid)){selId=n.gid;view='detail';}}
+  render();
+}
+function readAll(){DB.notifs.filter(n=>n.uid===me.id).forEach(n=>n.read=true);save();render();}
+function bellHTML(){
+  const mine=DB.notifs.filter(n=>n.uid===me.id).sort((a,b)=>b.at.localeCompare(a.at));
+  const un=mine.filter(n=>!n.read).length;
+  return `<div class="bell"><button onclick="toggleBell()">🔔${un?`<span class="n">${un}</span>`:''}</button>
+  ${bellOpen?`<div class="panel"><div onclick="readAll()" style="text-align:center;color:var(--b2)">Mark all read</div>
+  ${mine.slice(0,25).map(n=>`<div class="${n.read?'':'u'}" onclick="openNotif('${n.id}')">${esc(n.text)}<br><span class="m">${fmt(n.at)}</span></div>`).join('')||'<div>No notifications</div>'}</div>`:''}</div>`;
+}
+
+/* ============ MODULE: GRIEVANCES ============ */
+// Which grievances the current user may see
+function scope(){
+  if(me.role==='student')return DB.grievances.filter(g=>g.studentId===me.id);
+  if(me.role==='officer')return DB.grievances.filter(g=>g.dept===me.dept||g.officerId===me.id);
+  return DB.grievances;
+}
+const isEsc=g=>!['Resolved','Rejected'].includes(g.status)&&days(g.created)>7;
+const hist=(g,status,note)=>g.history.push({status,at:now(),by:me.id,note:note||''});
+// Anonymous grievances hide the student's identity from officers
+function userLabel(id,g){
+  const u=uById(id);if(!u)return 'System';
+  if(u.role==='student'&&g.anon&&me.role==='officer')return 'Anonymous Student';
+  return u.name+(u.role==='student'&&g.anon&&me.role==='admin'?' (anonymous)':'');
+}
+const badge=g=>`<span class="badge ${sc(g.status)}">${g.status}</span>${isEsc(g)?' <span class="badge esc">Escalated</span>':''}`;
+
+function go(v,id){view=v;if(id)selId=id;bellOpen=false;render();}
+function submitGrievance(e){
+  e.preventDefault();const f=e.target.elements;
+  const title=f.title.value.trim(),desc=f.desc.value.trim();
+  if(!title||!desc){$('#err').textContent='Title and description are required.';return;}
+  const cat=f.cat.value;
+  const g={id:'GRV-'+new Date().getFullYear()+'-'+String(++DB.seq).padStart(4,'0'),cat,title,desc,priority:f.pri.value,
+    anon:f.anon.checked,studentId:me.id,dept:CAT2DEPT[cat],officerId:null,status:'Submitted',created:now(),resolution:'',
+    feedback:null,history:[{status:'Submitted',at:now(),by:me.id,note:''}],comments:[]};
+  DB.grievances.push(g);
+  notify([...deptOfficers(g.dept),...admins()],`New grievance ${g.id}: ${title}`,g.id);
+  save();selId=g.id;view='detail';render();
+}
+function updateStatus(id){
+  const g=gById(id),s=$('#ns').value,n=$('#nn').value.trim();
+  if(s===g.status)return alert('Choose a different status to update.');
+  if((s==='Resolved'||s==='Rejected')&&!n)return alert('Please add a resolution note.');
+  g.status=s;hist(g,s,n);if(s==='Resolved'||s==='Rejected')g.resolution=n;
+  notify([g.studentId],`${g.id} status changed to "${s}"`,g.id);save();render();
+}
+function assign(id){
+  const g=gById(id),d=$('#ad').value,o=$('#ao').value;
+  if(o){const u=uById(o);g.officerId=o;g.dept=u.dept;}else{g.officerId=null;g.dept=d;}
+  hist(g,g.status,`Assigned to ${g.dept}${g.officerId?' / '+uById(g.officerId).name:''}`);
+  notify([...deptOfficers(g.dept),g.officerId,g.studentId],`${g.id} assigned to ${g.dept}`,g.id);save();render();
+}
+function star(n){rating=n;document.querySelectorAll('.stars button').forEach((b,i)=>b.classList.toggle('on',i<n));}
+function sendFeedback(id){
+  if(!rating)return alert('Please pick a star rating.');
+  const g=gById(id);g.feedback={rating,remarks:$('#fr').value.trim(),at:now()};rating=0;
+  notify([...deptOfficers(g.dept),g.officerId],`Feedback received on ${g.id}: ${g.feedback.rating}★`,g.id);save();render();
+}
+function reopen(id){
+  const g=gById(id);if(!confirm('Reopen this grievance?'))return;
+  g.status='Under Review';g.feedback=null;g.resolution='';hist(g,'Under Review','Reopened by student');
+  notify([...deptOfficers(g.dept),g.officerId,...admins()],`${g.id} was reopened by the student`,g.id);save();render();
+}
+function listRows(){
+  const q=filt.q.toLowerCase();
+  const rows=scope().filter(g=>(!filt.s||(filt.s==='Escalated'?isEsc(g):g.status===filt.s))&&
+    (!q||(g.id+g.title+g.cat).toLowerCase().includes(q))).sort((a,b)=>b.created.localeCompare(a.created));
+  const showStu=me.role!=='student';
+  return `<table><tr><th>ID</th><th>Title</th>${showStu?'<th>Student</th>':''}<th>Category</th><th>Priority</th><th>Status</th><th>Dept</th><th>Date</th></tr>
+  ${rows.map(g=>`<tr class="row" onclick="go('detail','${g.id}')"><td>${g.id}</td><td>${esc(g.title)}</td>
+  ${showStu?`<td>${esc(userLabel(g.studentId,g))}</td>`:''}<td>${g.cat}</td><td class="p-${g.priority}">${g.priority}</td><td>${badge(g)}</td><td>${g.dept}</td><td class="m">${new Date(g.created).toLocaleDateString()}</td></tr>`).join('')
+  ||`<tr><td colspan="8" class="m">No grievances found.</td></tr>`}</table>`;
+}
+function listHTML(){
+  const title={student:'My Grievances',officer:'Grievances for '+me.dept,admin:'All Grievances'}[me.role];
+  return `<div class="card"><h2>${title}</h2><div class="filters">
+  <input placeholder="Search by ID, title, category…" value="${esc(filt.q)}" oninput="filt.q=this.value;$('#gl').innerHTML=listRows()">
+  <select onchange="filt.s=this.value;$('#gl').innerHTML=listRows()"><option value="">All statuses</option>
+  ${[...STATUSES,'Escalated'].map(s=>`<option ${filt.s===s?'selected':''}>${s}</option>`).join('')}</select></div>
+  <div class="tbl" id="gl">${listRows()}</div></div>`;
+}
+function submitHTML(){
+  return `<div class="card"><h2>Submit a Grievance</h2><form onsubmit="submitGrievance(event)">
+  <div class="two"><div><label>Category</label><select name="cat">${CATS.map(c=>`<option>${c}</option>`).join('')}</select></div>
+  <div><label>Priority</label><select name="pri"><option>Low</option><option selected>Medium</option><option>High</option></select></div></div>
+  <label>Title *</label><input name="title" maxlength="120">
+  <label>Description *</label><textarea name="desc"></textarea>
+  <label style="font-weight:400"><input type="checkbox" name="anon">Submit anonymously (officers won't see my name)</label>
+  <div class="err" id="err"></div><button class="btn">Submit Grievance</button></form></div>`;
+}
+function detailHTML(){
+  const g=gById(selId);
+  if(!g||!scope().includes(g))return `<div class="card">Grievance not found or access denied.</div>`;
+  const staff=me.role!=='student',st=uById(g.studentId);
+  return `<div class="card"><button class="btn sec sm" onclick="go('list')">← Back</button>
+  <h2 style="margin-top:12px">${g.id} — ${esc(g.title)}</h2><p>${badge(g)} <span class="p-${g.priority}">${g.priority} priority</span></p>
+  <p class="m">Category: ${g.cat} · Dept: ${g.dept}${g.officerId?' · Officer: '+esc(uById(g.officerId).name):''} · Raised: ${fmt(g.created)}
+  ${staff?'<br>Student: '+esc(userLabel(g.studentId,g)):''}</p><p>${esc(g.desc).replace(/\n/g,'<br>')}</p>
+  ${g.resolution?`<div class="cm me"><b>Resolution note:</b> ${esc(g.resolution)}</div>`:''}</div>
+  <div class="two"><div class="card"><h3>Status Timeline</h3><ul class="tl">
+  ${g.history.map(h=>`<li><b>${h.status}</b><br><span class="m">${fmt(h.at)} · ${esc(userLabel(h.by,g))}</span>${h.note?`<div>${esc(h.note)}</div>`:''}</li>`).join('')}</ul></div>
+  <div>
+  ${staff?`<div class="card"><h3>Update Status</h3><select id="ns">${STATUSES.map(s=>`<option ${s===g.status?'selected':''}>${s}</option>`).join('')}</select>
+  <label>Resolution note / remarks</label><textarea id="nn" style="min-height:60px"></textarea><button class="btn" onclick="updateStatus('${g.id}')">Update</button></div>`:''}
+  ${me.role==='admin'?`<div class="card"><h3>Assign / Reassign</h3><label>Department</label>
+  <select id="ad">${DEPTS.map(d=>`<option ${d===g.dept?'selected':''}>${d}</option>`).join('')}</select>
+  <label>Specific officer (optional)</label><select id="ao"><option value="">Any officer in department</option>
+  ${DB.users.filter(u=>u.role==='officer').map(u=>`<option value="${u.id}" ${u.id===g.officerId?'selected':''}>${esc(u.name)} — ${u.dept}</option>`).join('')}</select>
+  <button class="btn" onclick="assign('${g.id}')">Assign</button></div>`:''}
+  ${me.role==='student'&&g.status==='Resolved'?feedbackHTML(g):''}
+  </div></div>${commentsHTML(g)}`;
+}
+function feedbackHTML(g){
+  if(g.feedback)return `<div class="card"><h3>Your Feedback</h3><div class="stars">${[1,2,3,4,5].map(i=>`<button class="${i<=g.feedback.rating?'on':''}" disabled>★</button>`).join('')}</div>
+  <p>${esc(g.feedback.remarks)||'<span class="m">No remarks</span>'}</p><button class="btn red sm" onclick="reopen('${g.id}')">Reopen grievance</button></div>`;
+  return `<div class="card"><h3>Rate the Resolution</h3><div class="stars">${[1,2,3,4,5].map(i=>`<button onclick="star(${i})">★</button>`).join('')}</div>
+  <label>Remarks</label><textarea id="fr" style="min-height:60px"></textarea>
+  <button class="btn" onclick="sendFeedback('${g.id}')">Submit Feedback</button> <button class="btn red" onclick="reopen('${g.id}')">Reopen</button></div>`;
+}
+
+/* ============ MODULE: COMMENTS ============ */
+function addComment(id){
+  const g=gById(id),t=$('#cm').value.trim();if(!t)return;
+  g.comments.push({uid:me.id,text:t,at:now()});
+  const to=me.role==='student'?[...deptOfficers(g.dept),g.officerId]:[g.studentId];
+  notify(to,`New comment on ${g.id}`,g.id);save();render();
+}
+function commentsHTML(g){
+  return `<div class="card"><h3>Comments (${g.comments.length})</h3>
+  ${g.comments.map(c=>`<div class="cm ${c.uid===me.id?'me':''}"><b>${esc(userLabel(c.uid,g))}</b> <span class="m">${uById(c.uid)?.role||''} · ${fmt(c.at)}</span><br>${esc(c.text).replace(/\n/g,'<br>')}</div>`).join('')||'<p class="m">No comments yet.</p>'}
+  <textarea id="cm" placeholder="Write a comment…" style="min-height:60px;margin-top:8px"></textarea><button class="btn" onclick="addComment('${g.id}')">Add Comment</button></div>`;
+}
+
+/* ============ MODULE: DASHBOARD ============ */
+function bars(obj){
+  const max=Math.max(1,...Object.values(obj));
+  return Object.entries(obj).map(([k,v])=>`<div class="bar"><i>${k}</i><div class="tr"><div style="width:${v/max*100}%"></div></div><em>${v}</em></div>`).join('');
+}
+function dashHTML(){
+  const gs=scope(),c=f=>gs.filter(f).length;
+  let h=`<h2>Welcome, ${esc(me.name)}</h2><div class="grid" style="margin-bottom:16px">
+  <div class="stat"><b>${gs.length}</b><span>Total</span></div>
+  <div class="stat"><b>${c(g=>['Submitted','Under Review'].includes(g.status))}</b><span>Pending</span></div>
+  <div class="stat"><b>${c(g=>g.status==='In Progress')}</b><span>In Progress</span></div>
+  <div class="stat"><b>${c(g=>g.status==='Resolved')}</b><span>Resolved</span></div>
+  ${me.role!=='student'?`<div class="stat" style="border-left-color:#991b1b"><b>${c(isEsc)}</b><span>Escalated (&gt;7 days)</span></div>`:''}</div>`;
+  if(me.role==='admin'){
+    const bs={},bc={};STATUSES.forEach(s=>bs[s]=c(g=>g.status===s));CATS.forEach(k=>bc[k]=c(g=>g.cat===k));
+    h+=`<div class="two"><div class="card"><h3>Grievances by Status</h3>${bars(bs)}</div><div class="card"><h3>Grievances by Category</h3>${bars(bc)}</div></div>`;
+  }
+  const rec=gs.slice().sort((a,b)=>b.created.localeCompare(a.created)).slice(0,5);
+  h+=`<div class="card"><h3>Recent Grievances</h3><div class="tbl"><table>${rec.map(g=>`<tr class="row" onclick="go('detail','${g.id}')"><td>${g.id}</td><td>${esc(g.title)}</td><td>${badge(g)}</td></tr>`).join('')||'<tr><td class="m">Nothing yet.</td></tr>'}</table></div></div>`;
+  return h;
+}
+
+/* ============ MODULE: ADMIN USERS ============ */
+function setRole(id,r){
+  const u=uById(id);if(u.id===me.id)return alert('You cannot change your own role.');
+  u.role=r;if(r==='officer'&&!u.dept)u.dept='General';save();render();
+}
+function setDept(id,d){uById(id).dept=d;save();render();}
+function usersHTML(){
+  return `<div class="card"><h2>Manage Users</h2><div class="tbl"><table><tr><th>Name</th><th>Email</th><th>Role</th><th>Department (officers)</th></tr>
+  ${DB.users.map(u=>`<tr><td>${esc(u.name)}</td><td>${esc(u.email)}</td>
+  <td><select onchange="setRole('${u.id}',this.value)" ${u.id===me.id?'disabled':''}>${['student','officer','admin'].map(r=>`<option ${r===u.role?'selected':''}>${r}</option>`).join('')}</select></td>
+  <td>${u.role==='officer'?`<select onchange="setDept('${u.id}',this.value)">${DEPTS.map(d=>`<option ${d===u.dept?'selected':''}>${d}</option>`).join('')}</select>`:'—'}</td></tr>`).join('')}</table></div></div>`;
+}
+
+/* ============ MODULE: APP SHELL / ROUTER ============ */
+function render(){
+  me=uById(DB.session)||null;
+  if(!me){$('#app').innerHTML=authHTML();return;}
+  if(!ACL[me.role].includes(view))view='dashboard';   // block other roles' pages
+  const page={dashboard:dashHTML,submit:submitHTML,list:listHTML,detail:detailHTML,users:usersHTML}[view]();
+  $('#app').innerHTML=`<div class="top"><b>🎓 SGMS</b><nav>${NAV[me.role].map(([v,l])=>
+    `<button class="${view===v||(view==='detail'&&v==='list')?'on':''}" onclick="go('${v}')">${l}</button>`).join('')}</nav><span class="sp"></span>
+  ${bellHTML()}<span style="font-size:13px">${esc(me.name)} (${me.role}${me.dept?' · '+me.dept:''})</span>
+  <button class="btn sec sm" onclick="resetDemo()">Reset demo data</button><button class="btn sm" style="background:#1e40af" onclick="logout()">Logout</button></div>
+  <div class="wrap">${page}</div>`;
+}
+load();render();
+</script>
+</body>
+</html>
