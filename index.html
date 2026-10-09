@@ -50,7 +50,7 @@ ul.tl li:before{content:"";position:absolute;left:-25px;top:5px;width:12px;heigh
 .panel{position:absolute;right:0;top:40px;width:320px;max-height:380px;overflow:auto;background:#fff;color:var(--t);border:1px solid var(--l);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.15)}
 .panel div{padding:9px 12px;border-bottom:1px solid var(--l);font-size:13px;cursor:pointer}.panel div.u{background:var(--bl);font-weight:600}
 .stars button{background:none;border:0;font-size:28px;color:#cbd5e1;cursor:pointer;padding:0 2px}.stars button.on{color:#f59e0b}
-.auth{max-width:400px;margin:50px auto}.demo{background:var(--bl);border-radius:8px;padding:10px;font-size:13px;margin-top:14px}
+.auth{max-width:400px;margin:50px auto}
 .two{display:grid;gap:14px;grid-template-columns:1fr 1fr}.filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
 .filters>*{flex:1;min-width:150px}.tbl{overflow-x:auto}
 @media(max-width:700px){.two{grid-template-columns:1fr}.panel{width:260px;right:-60px}}
@@ -113,6 +113,12 @@ function seed(){
 }
 
 /* ============ MODULE: AUTH ============ */
+// Reserved names: nobody can register a student account with these
+const RESERVED=['admin','principal'];
+function isReserved(email){
+  const local=email.split('@')[0];
+  return RESERVED.some(r=>local===r||local.startsWith(r+'.')||local.startsWith(r+'_')||local.startsWith(r+'-'));
+}
 function doLogin(e){
   e.preventDefault();const f=e.target.elements;
   const u=DB.users.find(x=>x.email===f.email.value.trim().toLowerCase()&&x.pass===f.pass.value);
@@ -123,6 +129,7 @@ function doRegister(e){
   e.preventDefault();const f=e.target.elements;
   const name=f.name.value.trim(),email=f.email.value.trim().toLowerCase(),pass=f.pass.value;
   if(!name||!email||pass.length<6){authMsg='Fill all fields (password min 6 chars).';return render();}
+  if(isReserved(email)){authMsg='This email is reserved for staff and cannot be used to register.';return render();}
   if(DB.users.some(u=>u.email===email)){authMsg='Email already registered.';return render();}
   const u={id:uid(),name,email,pass,role:'student'};DB.users.push(u);DB.session=u.id;save();
   authMsg='';view='dashboard';render();
@@ -143,8 +150,7 @@ function authHTML(){
   <div class="err">${esc(authMsg)}</div>
   <button class="btn" style="width:100%">${reg?'Register as Student':'Login'}</button></form>
   <p class="m" style="text-align:center">${reg?'Have an account? <a href="#" onclick="setAuth(\'login\');return false">Login</a>':'New student? <a href="#" onclick="setAuth(\'register\');return false">Register</a>'}</p>
-  <div class="demo"><b>Demo accounts</b><br>student@demo.com / student123<br>officer@demo.com / officer123 (Academics)<br>hostel@demo.com / officer123 (Hostel)<br>admin@demo.com / admin123</div>
-  <button class="btn sec sm" style="margin-top:12px" onclick="resetDemo()">Reset demo data</button></div></div>`;
+  </div></div>`;
 }
 
 /* ============ MODULE: NOTIFICATIONS ============ */
@@ -251,7 +257,7 @@ function submitHTML(){
 function detailHTML(){
   const g=gById(selId);
   if(!g||!scope().includes(g))return `<div class="card">Grievance not found or access denied.</div>`;
-  const staff=me.role!=='student',st=uById(g.studentId);
+  const staff=me.role!=='student';
   return `<div class="card"><button class="btn sec sm" onclick="go('list')">← Back</button>
   <h2 style="margin-top:12px">${g.id} — ${esc(g.title)}</h2><p>${badge(g)} <span class="p-${g.priority}">${g.priority} priority</span></p>
   <p class="m">Category: ${g.cat} · Dept: ${g.dept}${g.officerId?' · Officer: '+esc(uById(g.officerId).name):''} · Raised: ${fmt(g.created)}
@@ -335,7 +341,8 @@ function render(){
   $('#app').innerHTML=`<div class="top"><b>🎓 SGMS</b><nav>${NAV[me.role].map(([v,l])=>
     `<button class="${view===v||(view==='detail'&&v==='list')?'on':''}" onclick="go('${v}')">${l}</button>`).join('')}</nav><span class="sp"></span>
   ${bellHTML()}<span style="font-size:13px">${esc(me.name)} (${me.role}${me.dept?' · '+me.dept:''})</span>
-  <button class="btn sec sm" onclick="resetDemo()">Reset demo data</button><button class="btn sm" style="background:#1e40af" onclick="logout()">Logout</button></div>
+  ${me.role==='admin'?'<button class="btn sec sm" onclick="resetDemo()">Reset demo data</button>':''}
+  <button class="btn sm" style="background:#1e40af" onclick="logout()">Logout</button></div>
   <div class="wrap">${page}</div>`;
 }
 load();render();
